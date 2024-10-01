@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: |
+  Create static website for kittens carousel
+
+Resources:
+
+  rSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH and HTTP
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  rWebServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      Tags: 
+        - Key: Name
+          Value: irlan-carousel-webserver
+      ImageId: ami-066784287e358dad1
+      InstanceType: t2.micro
+      KeyName: irlan
+      SecurityGroups: 
+        - !Ref rSecurityGroup
+      UserData:
+        Fn::Base64:
+          |
+            #!/bin/bash -x
+
+            yum update -y
+            yum install -y httpd wget
+
+            cd /var/www/html
+            FOLDER=https://raw.githubusercontent.com/Gigantessaba/my-repository/main/aws/projects/101-kittens-carousel-static-website-ec2/static-web
+
+            wget ${FOLDER}/index.html
+            wget ${FOLDER}/cat0.jpg
+            wget ${FOLDER}/cat1.jpg
+            wget ${FOLDER}/cat2.jpg
+
+            systemctl start httpd
+            systemctl enable httpd
+
+Outputs:
+
+  WebURL:
+    Description: URL for website
+    Value: !Join [ "", ["http://", !GetAtt rWebServer.PublicDnsName ] ]
