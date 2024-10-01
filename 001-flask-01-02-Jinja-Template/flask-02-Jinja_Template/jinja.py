@@ -10,5 +10,5 @@ def sum(num1, num2):
     return render_template("body.html", value1=num1, value2=num2, sum=int(num1)+int(num2) )
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8081)
-    # app.run(host= '0.0.0.0', port=8081)
+   # app.run(debug=True, port=8081)
+     app.run(host= '0.0.0.0', port=80)
