@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: |
+  This cfn file is used for creating a template which runs S3 static 
+  web-hosting using cloudfront distribution.
+
+Parameters:
+
+  KittensDomainName:
+    Description: Domain name for static website
+    Type: String
+    Default: kittens.irlancdossantos.com
+
+  HostedZoneId:
+    Description: Hosted Zone Id for domain
+    Type: AWS::Route53::HostedZone::Id
+
+Resources:
+
+  KittensBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref KittensDomainName
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - BucketKeyEnabled: false
+            ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      WebsiteConfiguration:
+        IndexDocument: index.html
+
+  KittensBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref KittensBucket
+      PolicyDocument: 
+        Id: PublicReadPolicy
+        Version: 2012-10-17
+        Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Join [ '', [ !GetAtt KittensBucket.Arn, '/*' ] ]
+
+
+  KittensCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref KittensDomainName
+      ValidationMethod: DNS
+      DomainValidationOptions: 
+        - DomainName: !Ref KittensDomainName
+          HostedZoneId: !Ref HostedZoneId
+
+
+Outputs:
+
+  BucketName:
+    Description: Name of S3 Bucket
+    Value: !Ref KittensBucket
+    
+#   CloudfrontEndpoint:
+    
+#   FullDomainName:
+    
